@@ -7,53 +7,71 @@ from flask import jsonify
 @app.route('/', methods=['GET'])
 @app.route('/index', methods=['GET'])
 def index():
-    #requête pour récupérer les joueurs
+    # requête pour récupérer les joueurs
     request_sql = f'''SELECT players_id, players_pseudo 
     FROM players'''
 
-    #on exécute la requete
+    # on exécute la requete
     data = sql_select(request_sql)
 
-    #on print le résultat de la requête
+    # on print le résultat de la requête
     print(data)
 
-    #on parcourt le résultat
+    # on parcourt le résultat
     for player in data:
-        #on récupère l'id du joueur
+        # on récupère l'id du joueur
         player_id = player["players_id"]
 
-        #requête pour récupérer les chats d'un joueur
+        # requête pour récupérer les chats d'un joueur
         request_sql = f'''SELECT * FROM cats 
         JOIN rooms ON rooms.rooms_id = cats.rooms_id 
         WHERE rooms.players_id = {player_id}'''
-
 
         cats = sql_select(request_sql)
         print(f'''CHATS DU JOUEUR {player_id} : \n''')
         print(len(cats))
 
-        #on ajoute le nombre de chats (le nombre d'objets dans la liste renvoyée par le serveur) au player actuel
+        # on ajoute le nombre de chats (le nombre d'objets dans la liste renvoyée par le serveur) au player actuel
         player["cats_count"] = len(cats)
 
-    #on renvoie le résultat jsonifié
+    # on renvoie le résultat jsonifié
     return jsonify(data), 200
-
 
 
 @app.route('/login', methods=['POST'])
 def login():
-    return "Not implemented", 501
+    # on récupére le json envoyé par le client
+    formulaire_login = (request.get_json())
+
+    # on récupére 'e-mail et le mdp du joueur
+
+    email = formulaire_login["email"]
+    password = formulaire_login["password"]
+
+    # on vérifie que l'email existe puis que le mot de passe est correct
+    sql_request = f'''SELECT players_id, players_email, players_password FROM players WHERE players_email = "{email}"'''
+
+    player_avec_cette_adresse_email = sql_select(sql_request)
+    print(player_avec_cette_adresse_email)
+    if len(player_avec_cette_adresse_email) == 0:
+        return "Adresse email non reconnue ou inexsitante", 400
+    elif password == player_avec_cette_adresse_email[0]["players_password"]:
+        player_id = player_avec_cette_adresse_email[0]["players_id"]
+        dico_player_id = {"id": player_id}
+        return jsonify(dico_player_id), 200
+    else:
+        return "Mot de passe incorrect", 403
 
 
 @app.route('/signup', methods=['POST'])
 def sign_up():
-    #on récupère le json envoyé par le client
+    # on récupère le json envoyé par le client
     formulaire_inscription = (request.get_json())
 
-    #on récupère l'email
+    # on récupère l'email
     email = formulaire_inscription["email"]
 
-    #on check si l'email existe, si oui on envoie une erreur
+    # on check si l'email existe, si oui on envoie une erreur
     sql_request = f'''SELECT * FROM players WHERE players_email = "{email}"'''
 
     players_avec_cette_email = sql_select(sql_request)
@@ -61,7 +79,7 @@ def sign_up():
     if len(players_avec_cette_email) > 0:
         return "Email déjà existant", 503
 
-    #on ajoute le joueur
+    # on ajoute le joueur
     sql_request = f'''INSERT INTO players(players_pseudo, players_email, players_password)
     VALUES("{formulaire_inscription["pseudo"]}", 
     "{formulaire_inscription["email"]}", 
@@ -108,4 +126,3 @@ def get_free_cats():
 @app.route('/cats/<int:cats_id>', methods=['PATCH', 'DELETE'])
 def update_cat(cats_id):
     return "Not implemented", 501
-
