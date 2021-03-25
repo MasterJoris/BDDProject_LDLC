@@ -47,7 +47,31 @@ def login():
 
 @app.route('/signup', methods=['POST'])
 def sign_up():
-    return "Not implemented", 501
+    #on récupère le json envoyé par le client
+    formulaire_inscription = (request.get_json())
+
+    #on récupère l'email
+    email = formulaire_inscription["email"]
+
+    #on check si l'email existe, si oui on envoie une erreur
+    sql_request = f'''SELECT * FROM players WHERE players_email = "{email}"'''
+
+    players_avec_cette_email = sql_select(sql_request)
+
+    if len(players_avec_cette_email) > 0:
+        return "Email déjà existant", 503
+
+    #on ajoute le joueur
+    sql_request = f'''INSERT INTO players(players_pseudo, players_email, players_password)
+    VALUES("{formulaire_inscription["pseudo"]}", 
+    "{formulaire_inscription["email"]}", 
+    "{formulaire_inscription["password"]}")'''
+
+    players_id = sql_insert(sql_request)
+
+    add_room(players_id, 0, 0, formulaire_inscription["seed"])
+
+    return "OK", 200
 
 
 @app.route('/users/<int:players_id>/rooms', methods=['GET', 'POST'])
