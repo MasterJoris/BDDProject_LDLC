@@ -7,7 +7,37 @@ from flask import jsonify
 @app.route('/', methods=['GET'])
 @app.route('/index', methods=['GET'])
 def index():
-    return "Hello World", 200
+    #requête pour récupérer les joueurs
+    request_sql = f'''SELECT players_id, players_pseudo 
+    FROM players'''
+
+    #on exécute la requete
+    data = sql_select(request_sql)
+
+    #on print le résultat de la requête
+    print(data)
+
+    #on parcourt le résultat
+    for player in data:
+        #on récupère l'id du joueur
+        player_id = player["players_id"]
+
+        #requête pour récupérer les chats d'un joueur
+        request_sql = f'''SELECT * FROM cats 
+        JOIN rooms ON rooms.rooms_id = cats.rooms_id 
+        WHERE rooms.players_id = {player_id}'''
+
+
+        cats = sql_select(request_sql)
+        print(f'''CHATS DU JOUEUR {player_id} : \n''')
+        print(len(cats))
+
+        #on ajoute le nombre de chats (le nombre d'objets dans la liste renvoyée par le serveur) au player actuel
+        player["cats_count"] = len(cats)
+
+    #on renvoie le résultat jsonifié
+    return jsonify(data), 200
+
 
 
 @app.route('/login', methods=['POST'])
