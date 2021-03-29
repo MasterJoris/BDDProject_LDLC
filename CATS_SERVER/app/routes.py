@@ -119,13 +119,27 @@ def get_rooms_request(players_id):
 
     return jsonify(players_rooms), 200
 
+
 def add_room_request(players_id, request_json):
     print(request_json)
     return add_room(players_id, request_json["position_x"], request_json["position_y"], request_json["seed"])
 
 
 def add_room(players_id, pos_x, pos_y, seed):
-    return "Not implemented", 501
+    # On créé une nouvelle ligne dans la table rooms
+    sql_request = f'''INSERT INTO `rooms` 
+    (`rooms_id`, `rooms_position_x`, `rooms_position_y`, `rooms_seed`, `players_id`) 
+    VALUES (NULL, '{pos_x}', '{pos_y}', '{seed}', '{players_id}');'''
+
+    # On check s'il existe déjà une salle à l'endroit désiré
+    sql_request2 = f'''SELECT rooms_position_x,rooms_position_y FROM `rooms` WHERE players_id = {players_id}'''
+    rooms_positions = sql_select(sql_request2)
+    for rooms in rooms_positions:
+        if pos_x == rooms["rooms_position_y"] and pos_y == rooms["rooms_position_y"]:
+            return "Il y a déjà une salle à cette position", 403
+    new_room = sql_insert(sql_request)
+    new_room_dico = {"id": new_room}
+    return jsonify(new_room_dico), 200
 
 
 @app.route('/users/<int:players_id>/rooms/<int:rooms_id>', methods=['DELETE'])
