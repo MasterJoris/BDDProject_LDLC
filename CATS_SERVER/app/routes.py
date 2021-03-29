@@ -126,17 +126,17 @@ def add_room_request(players_id, request_json):
 
 
 def add_room(players_id, pos_x, pos_y, seed):
-    # On créé une nouvelle ligne dans la table rooms
+    # Requête pour créer une nouvelle ligne dans la table rooms
     sql_request = f'''INSERT INTO `rooms` 
     (`rooms_id`, `rooms_position_x`, `rooms_position_y`, `rooms_seed`, `players_id`) 
     VALUES (NULL, '{pos_x}', '{pos_y}', '{seed}', '{players_id}');'''
-
     # On check s'il existe déjà une salle à l'endroit désiré
     sql_request2 = f'''SELECT rooms_position_x,rooms_position_y FROM `rooms` WHERE players_id = {players_id}'''
     rooms_positions = sql_select(sql_request2)
     for rooms in rooms_positions:
-        if pos_x == rooms["rooms_position_y"] and pos_y == rooms["rooms_position_y"]:
+        if pos_x == rooms["rooms_position_x"] and pos_y == rooms["rooms_position_y"]:
             return "Il y a déjà une salle à cette position", 403
+    # On insert la nouvelle salle dans la BDD et on renvoit l"id de la salle.
     new_room = sql_insert(sql_request)
     new_room_dico = {"id": new_room}
     return jsonify(new_room_dico), 200
@@ -144,7 +144,25 @@ def add_room(players_id, pos_x, pos_y, seed):
 
 @app.route('/users/<int:players_id>/rooms/<int:rooms_id>', methods=['DELETE'])
 def delete_room(players_id, rooms_id):
-    return "Not implemented", 501
+    # Requête pour vérifier que le rooms_id est bien lié au players_id
+    sql_request2 = f'''SELECT * FROM `rooms`
+    WHERE `rooms_id` = {rooms_id} AND `players_id` = {players_id}'''
+    room_player = sql_select(sql_request2)
+    if len(room_player) == 0 :
+        return "Le joueur n'a pas cette salle", 403
+    else :
+        # Requête pour vérifier qu'il n y a pas de chat dans la salle
+        sql_request3 = f'''SELECT * FROM `cats`
+        WHERE `rooms_id` = {rooms_id} '''
+        cats = sql_select(sql_request3)
+        # Requête pour supprimer une ligne dans la table rooms
+        sql_request = f'''DELETE FROM `rooms` WHERE `rooms`.`rooms_id` = {rooms_id}'''
+        if len(cats) == 0 :
+            sql_delete(sql_request)
+            return "OK", 200
+        else :
+            return "Suppression impossible, des chats sont présents dans la salle !",403
+
 
 
 @app.route('/cats', methods=['GET'])
