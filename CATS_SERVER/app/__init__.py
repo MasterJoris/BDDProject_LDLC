@@ -4,7 +4,7 @@ from flask_mysqldb import MySQL
 
 app = Flask(__name__)
 
-app.config['MYSQL_HOST'] = '10.96.16.51'  # Adresse IP de l'école sinon chez soit : 127.0.0.1:5000
+app.config['MYSQL_HOST'] = '90.65.154.227'  # Adresse IP de l'école sinon chez soit : 127.0.0.1:5000
 app.config['MYSQL_USER'] = 'student'
 app.config['MYSQL_PASSWORD'] = 'LDLC'
 app.config['MYSQL_DB'] = 'kitty_crush'
