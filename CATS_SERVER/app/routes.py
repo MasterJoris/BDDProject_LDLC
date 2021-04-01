@@ -148,21 +148,20 @@ def delete_room(players_id, rooms_id):
     sql_request2 = f'''SELECT * FROM `rooms`
     WHERE `rooms_id` = {rooms_id} AND `players_id` = {players_id}'''
     room_player = sql_select(sql_request2)
-    if len(room_player) == 0 :
+    if len(room_player) == 0:
         return "Le joueur n'a pas cette salle", 403
-    else :
+    else:
         # Requête pour vérifier qu'il n y a pas de chat dans la salle
         sql_request3 = f'''SELECT * FROM `cats`
         WHERE `rooms_id` = {rooms_id} '''
         cats = sql_select(sql_request3)
         # Requête pour supprimer une ligne dans la table rooms
         sql_request = f'''DELETE FROM `rooms` WHERE `rooms`.`rooms_id` = {rooms_id}'''
-        if len(cats) == 0 :
+        if len(cats) == 0:
             sql_delete(sql_request)
             return "OK", 200
-        else :
-            return "Suppression impossible, des chats sont présents dans la salle !",403
-
+        else:
+            return "Suppression impossible, des chats sont présents dans la salle !", 403
 
 
 @app.route('/cats', methods=['GET'])
